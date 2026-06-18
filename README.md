@@ -10,10 +10,19 @@ Full-stack blog system for the assignment, with a React public/admin frontend, a
 
 ## Setup
 
+Use Node.js 20.19 or newer.
+
 ```powershell
 npm install
 npm run install:all
 Copy-Item .env.example server/.env
+```
+
+If PowerShell blocks `npm.ps1`, use `npm.cmd` instead:
+
+```powershell
+npm.cmd install
+npm.cmd run install:all
 ```
 
 Start the database:
@@ -31,11 +40,13 @@ npm run db:seed
 
 ## Run
 
+Task 1 only bootstraps project manifests, dependency installation, Docker database setup, and test scripts. The full development server will be available after later implementation tasks add the server and client entrypoints.
+
 ```powershell
 npm run dev
 ```
 
-The API will run on `http://localhost:4000` and the client on `http://localhost:5173`.
+When those entrypoints exist, the API will run on `http://localhost:4000` and the client on `http://localhost:5173`.
 
 ## Test
 
