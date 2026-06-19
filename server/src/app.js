@@ -16,10 +16,19 @@ app.use((_req, res) => {
 });
 
 app.use((err, _req, res, _next) => {
-  const status = err.statusCode ?? err.status ?? 500;
-  const message = status === 500 ? 'Internal server error' : err.message;
+  const rawStatus = err.statusCode ?? err.status ?? 500;
+  const status =
+    Number.isInteger(rawStatus) && rawStatus >= 400 && rawStatus <= 599
+      ? rawStatus
+      : 500;
+  const message =
+    err.expose === true
+      ? err.message
+      : status < 500
+        ? 'Bad request'
+        : 'Internal server error';
 
-  if (status === 500) {
+  if (status >= 500) {
     console.error(err);
   }
 
@@ -27,4 +36,3 @@ app.use((err, _req, res, _next) => {
 });
 
 export default app;
-
