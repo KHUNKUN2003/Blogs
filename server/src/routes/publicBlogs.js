@@ -58,7 +58,7 @@ router.get(
 
     const blogsResult = await query(
       `
-        SELECT id, title, slug, excerpt, image_urls, posted_at, view_count
+        SELECT id, title, slug, excerpt, cover_image_url, image_urls, posted_at, view_count
         FROM blogs
         ${whereSql}
         ORDER BY posted_at DESC
@@ -103,7 +103,7 @@ router.get(
         UPDATE blogs
         SET view_count = view_count + 1
         WHERE slug = $1 AND published = true
-        RETURNING id, title, slug, excerpt, content, image_urls, posted_at, view_count
+        RETURNING id, title, slug, excerpt, content, cover_image_url, image_urls, posted_at, view_count
       `,
       [slugValidation.value]
     );
@@ -115,7 +115,7 @@ router.get(
 
     const commentsResult = await query(
       `
-        SELECT id, author_name, content, created_at
+        SELECT id, sender_name, message, created_at
         FROM comments
         WHERE blog_id = $1 AND status = 'approved'
         ORDER BY created_at ASC
@@ -141,20 +141,20 @@ router.post(
       return next(exposedError(400, slugValidation.message));
     }
 
-    const authorName = req.body.author_name ?? req.body.sender_name ?? req.body.name;
-    const content = req.body.content ?? req.body.message;
-    const authorValidation = validateRequiredString(authorName, 'Sender name');
-    const contentValidation = validateRequiredString(content, 'Comment');
+    const senderName = req.body.sender_name ?? req.body.author_name ?? req.body.name;
+    const message = req.body.message ?? req.body.content;
+    const senderValidation = validateRequiredString(senderName, 'Sender name');
+    const messageValidation = validateRequiredString(message, 'Comment');
 
-    if (!authorValidation.valid) {
-      return next(exposedError(400, authorValidation.message));
+    if (!senderValidation.valid) {
+      return next(exposedError(400, senderValidation.message));
     }
 
-    if (!contentValidation.valid) {
-      return next(exposedError(400, contentValidation.message));
+    if (!messageValidation.valid) {
+      return next(exposedError(400, messageValidation.message));
     }
 
-    if (!isThaiNumericComment(contentValidation.value)) {
+    if (!isThaiNumericComment(messageValidation.value)) {
       return next(
         exposedError(
           400,
@@ -165,13 +165,13 @@ router.post(
 
     const commentResult = await query(
       `
-        INSERT INTO comments (blog_id, author_name, author_email, content, status)
-        SELECT id, $2, '', $3, 'pending'
+        INSERT INTO comments (blog_id, sender_name, message, status)
+        SELECT id, $2, $3, 'pending'
         FROM blogs
         WHERE slug = $1 AND published = true
-        RETURNING id, blog_id, author_name, content, status, created_at
+        RETURNING id, blog_id, sender_name, message, status, created_at
       `,
-      [slugValidation.value, authorValidation.value, contentValidation.value]
+      [slugValidation.value, senderValidation.value, messageValidation.value]
     );
     const comment = commentResult.rows[0];
 
