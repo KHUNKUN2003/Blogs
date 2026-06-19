@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import { config } from './config.js';
+import publicBlogsRouter from './routes/publicBlogs.js';
 
 const app = express();
 
@@ -10,6 +11,8 @@ app.use(express.json());
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
+
+app.use('/api/blogs', publicBlogsRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });
