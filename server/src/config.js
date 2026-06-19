@@ -13,9 +13,13 @@ const defaultAdminUsername = 'admin';
 const defaultAdminPassword = 'admin123';
 const defaultAdminToken = 'dev-admin-token-change-me';
 const productionAdminEnv = {
-  ADMIN_USERNAME: process.env.ADMIN_USERNAME,
-  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
-  ADMIN_TOKEN: process.env.ADMIN_TOKEN
+  ADMIN_USERNAME: process.env.ADMIN_USERNAME?.trim(),
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD?.trim(),
+  ADMIN_TOKEN: process.env.ADMIN_TOKEN?.trim()
+};
+const minimumAdminEnvLengths = {
+  ADMIN_PASSWORD: 12,
+  ADMIN_TOKEN: 16
 };
 
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
@@ -29,12 +33,17 @@ if (process.env.NODE_ENV === 'production') {
     ['ADMIN_TOKEN', defaultAdminToken]
   ].filter(([name, defaultValue]) => {
     const value = productionAdminEnv[name];
-    return value === undefined || value === defaultValue;
+    return (
+      value === undefined ||
+      value.length === 0 ||
+      value === defaultValue ||
+      value.length < (minimumAdminEnvLengths[name] ?? 1)
+    );
   });
 
   if (unsafeAdminEnv.length > 0) {
     throw new Error(
-      `Production admin configuration requires non-default values for ${unsafeAdminEnv
+      `Production admin configuration requires non-empty, non-default values with secure password/token lengths for ${unsafeAdminEnv
         .map(([name]) => name)
         .join(', ')}`
     );
@@ -47,7 +56,7 @@ export const config = {
     'postgres://blog_user:blog_password@localhost:5432/blog_system',
   port,
   clientOrigin: process.env.CLIENT_ORIGIN ?? 'http://localhost:5173',
-  adminUsername: process.env.ADMIN_USERNAME ?? defaultAdminUsername,
-  adminPassword: process.env.ADMIN_PASSWORD ?? defaultAdminPassword,
-  adminToken: process.env.ADMIN_TOKEN ?? defaultAdminToken
+  adminUsername: productionAdminEnv.ADMIN_USERNAME ?? defaultAdminUsername,
+  adminPassword: productionAdminEnv.ADMIN_PASSWORD ?? defaultAdminPassword,
+  adminToken: productionAdminEnv.ADMIN_TOKEN ?? defaultAdminToken
 };

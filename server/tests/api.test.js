@@ -382,6 +382,16 @@ describe('admin API', () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  it('rejects out-of-range admin blog IDs before querying', async () => {
+    const response = await request(app)
+      .get('/api/admin/blogs/9223372036854775808')
+      .set(adminHeaders);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: 'Invalid id' });
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it('rejects more than six additional image URLs before inserting', async () => {
     const response = await request(app)
       .post('/api/admin/blogs')

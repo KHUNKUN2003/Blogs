@@ -1,6 +1,7 @@
 export const THAI_NUMERIC_COMMENT_RE = /^[\u0E01-\u0E590-9\s]+$/;
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const MAX_IMAGE_URLS = 7;
+const POSTGRES_BIGINT_MAX = 9223372036854775807n;
 
 export function isThaiNumericComment(value) {
   return typeof value === 'string' && THAI_NUMERIC_COMMENT_RE.test(value);
@@ -41,7 +42,11 @@ export function validateSlug(value) {
 }
 
 export function validatePositiveIntegerId(value, fieldName = 'id') {
-  if (typeof value !== 'string' || !/^[1-9]\d*$/.test(value)) {
+  if (
+    typeof value !== 'string' ||
+    !/^[1-9]\d*$/.test(value) ||
+    BigInt(value) > POSTGRES_BIGINT_MAX
+  ) {
     return {
       valid: false,
       message: `Invalid ${fieldName}`
