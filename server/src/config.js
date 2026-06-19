@@ -19,5 +19,8 @@ export const config = {
     process.env.DATABASE_URL ??
     'postgres://blog_user:blog_password@localhost:5432/blog_system',
   port,
-  clientOrigin: process.env.CLIENT_ORIGIN ?? 'http://localhost:5173'
+  clientOrigin: process.env.CLIENT_ORIGIN ?? 'http://localhost:5173',
+  adminUsername: process.env.ADMIN_USERNAME ?? 'admin',
+  adminPassword: process.env.ADMIN_PASSWORD ?? 'admin123',
+  adminToken: process.env.ADMIN_TOKEN ?? 'dev-admin-token-change-me'
 };

@@ -1,6 +1,10 @@
 import cors from 'cors';
 import express from 'express';
 import { config } from './config.js';
+import { requireAdminAuth } from './middleware/auth.js';
+import adminAuthRouter from './routes/adminAuth.js';
+import adminBlogsRouter from './routes/adminBlogs.js';
+import adminCommentsRouter from './routes/adminComments.js';
 import publicBlogsRouter from './routes/publicBlogs.js';
 
 const app = express();
@@ -13,6 +17,9 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/blogs', publicBlogsRouter);
+app.use('/api/admin', adminAuthRouter);
+app.use('/api/admin/blogs', requireAdminAuth, adminBlogsRouter);
+app.use('/api/admin/comments', requireAdminAuth, adminCommentsRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });
