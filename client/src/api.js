@@ -1,10 +1,18 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
+function getErrorMessage(payload) {
+  if (typeof payload?.error === 'string') {
+    return payload.error;
+  }
+
+  return payload?.error?.message || payload?.message || 'Request failed';
+}
+
 async function parseJsonResponse(response) {
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const message = payload?.error?.message || payload?.message || 'Request failed';
+    const message = getErrorMessage(payload);
     throw new Error(message);
   }
 
