@@ -67,6 +67,22 @@ describe('public blog API', () => {
     expect(query.mock.calls[0][1]).toEqual(['%sec%', 1, 1]);
   });
 
+  it('rejects malformed page values before querying', async () => {
+    const response = await request(app).get('/api/blogs').query({ page: '2abc' });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: 'Page must be a positive integer' });
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it('rejects decimal limit values before querying', async () => {
+    const response = await request(app).get('/api/blogs').query({ limit: '1.9' });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: 'Limit must be a positive integer' });
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it('returns a published blog by slug, increments views, and includes approved comments only', async () => {
     query
       .mockResolvedValueOnce({
@@ -133,7 +149,7 @@ describe('public blog API', () => {
 
     const response = await request(app)
       .post('/api/blogs/first/comments')
-      .send({ author_name: 'Mali', content: thaiNumericMessage });
+      .send({ sender_name: 'Mali', message: thaiNumericMessage });
 
     expect(response.status).toBe(201);
     expect(response.body.data).toMatchObject({
@@ -149,12 +165,24 @@ describe('public blog API', () => {
     expect(query.mock.calls[0][0]).toContain('sender_name');
     expect(query.mock.calls[0][0]).toContain('message');
     expect(query.mock.calls[0][0]).not.toContain('author_email');
+    expect(query.mock.calls[0][0]).not.toContain('author_name');
+    expect(query.mock.calls[0][0]).not.toContain('content');
+  });
+
+  it('rejects legacy comment payload aliases before inserting', async () => {
+    const response = await request(app)
+      .post('/api/blogs/first/comments')
+      .send({ author_name: 'Mali', content: thaiNumericMessage });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: 'Sender name is required' });
+    expect(query).not.toHaveBeenCalled();
   });
 
   it('rejects non-Thai comment messages before inserting', async () => {
     const response = await request(app)
       .post('/api/blogs/first/comments')
-      .send({ author_name: 'Mali', content: 'hello' });
+      .send({ sender_name: 'Mali', message: 'hello' });
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({

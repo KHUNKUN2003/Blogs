@@ -9,11 +9,11 @@ const dbDir = path.resolve(__dirname, '../db');
 
 async function migrate() {
   const files = (await fs.readdir(dbDir))
-    .filter((file) => /^001_.*\.sql$/.test(file))
+    .filter((file) => /^\d{3}_(?!seed).*\.sql$/.test(file))
     .sort();
 
   if (files.length === 0) {
-    throw new Error(`No migration files matching 001_*.sql found in ${dbDir}`);
+    throw new Error(`No numbered migration files found in ${dbDir}`);
   }
 
   for (const file of files) {
@@ -36,4 +36,3 @@ migrate()
   .finally(async () => {
     await pool.end();
   });
-

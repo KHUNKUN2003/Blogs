@@ -24,11 +24,19 @@ function exposedError(statusCode, message) {
   return error;
 }
 
-function parsePositiveInt(value, fallback, max) {
-  const parsed = Number.parseInt(value, 10);
-
-  if (!Number.isInteger(parsed) || parsed < 1) {
+function parsePositiveIntQuery(value, fallback, fieldName, max) {
+  if (value === undefined) {
     return fallback;
+  }
+
+  if (typeof value !== 'string' || !/^[1-9]\d*$/.test(value)) {
+    throw exposedError(400, `${fieldName} must be a positive integer`);
+  }
+
+  const parsed = Number(value);
+
+  if (!Number.isSafeInteger(parsed)) {
+    throw exposedError(400, `${fieldName} must be a positive integer`);
   }
 
   return max ? Math.min(parsed, max) : parsed;
@@ -37,8 +45,8 @@ function parsePositiveInt(value, fallback, max) {
 router.get(
   '/',
   asyncHandler(async (req, res) => {
-    const page = parsePositiveInt(req.query.page, DEFAULT_PAGE);
-    const limit = parsePositiveInt(req.query.limit, DEFAULT_LIMIT, MAX_LIMIT);
+    const page = parsePositiveIntQuery(req.query.page, DEFAULT_PAGE, 'Page');
+    const limit = parsePositiveIntQuery(req.query.limit, DEFAULT_LIMIT, 'Limit', MAX_LIMIT);
     const offset = (page - 1) * limit;
     const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
     const where = ['published = true'];
@@ -141,8 +149,8 @@ router.post(
       return next(exposedError(400, slugValidation.message));
     }
 
-    const senderName = req.body.sender_name ?? req.body.author_name ?? req.body.name;
-    const message = req.body.message ?? req.body.content;
+    const senderName = req.body.sender_name;
+    const message = req.body.message;
     const senderValidation = validateRequiredString(senderName, 'Sender name');
     const messageValidation = validateRequiredString(message, 'Comment');
 
