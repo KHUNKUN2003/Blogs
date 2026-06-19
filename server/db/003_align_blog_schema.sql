@@ -56,3 +56,21 @@ WHERE sender_name IS NULL
 ALTER TABLE comments
   ALTER COLUMN sender_name SET NOT NULL,
   ALTER COLUMN message SET NOT NULL;
+
+DO $$
+DECLARE
+  legacy_column TEXT;
+BEGIN
+  FOREACH legacy_column IN ARRAY ARRAY['author_name', 'author_email', 'content']
+  LOOP
+    IF EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = current_schema()
+        AND table_name = 'comments'
+        AND column_name = legacy_column
+    ) THEN
+      EXECUTE format('ALTER TABLE comments ALTER COLUMN %I DROP NOT NULL', legacy_column);
+    END IF;
+  END LOOP;
+END $$;
