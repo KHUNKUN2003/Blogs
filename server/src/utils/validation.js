@@ -40,6 +40,20 @@ export function validateSlug(value) {
   };
 }
 
+export function validatePositiveIntegerId(value, fieldName = 'id') {
+  if (typeof value !== 'string' || !/^[1-9]\d*$/.test(value)) {
+    return {
+      valid: false,
+      message: `Invalid ${fieldName}`
+    };
+  }
+
+  return {
+    valid: true,
+    value
+  };
+}
+
 export function validateImageUrls(value) {
   if (!Array.isArray(value)) {
     return {

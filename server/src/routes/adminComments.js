@@ -1,6 +1,7 @@
 import express from 'express';
 import { query } from '../db.js';
 import { exposedError } from '../middleware/auth.js';
+import { validatePositiveIntegerId } from '../utils/validation.js';
 
 const router = express.Router();
 const VALID_STATUSES = new Set(['approved', 'rejected']);
@@ -17,6 +18,16 @@ function notFoundIfMissing(row) {
   }
 
   return row;
+}
+
+function validateRouteId(value) {
+  const id = validatePositiveIntegerId(value);
+
+  if (!id.valid) {
+    throw exposedError(400, id.message);
+  }
+
+  return id.value;
 }
 
 router.get(
@@ -46,6 +57,8 @@ router.get(
 router.patch(
   '/:id/status',
   asyncHandler(async (req, res) => {
+    const id = validateRouteId(req.params.id);
+
     if (!VALID_STATUSES.has(req.body.status)) {
       throw exposedError(400, 'Status must be approved or rejected');
     }
@@ -57,7 +70,7 @@ router.patch(
         WHERE id = $2
         RETURNING id, blog_id, sender_name, message, status, created_at
       `,
-      [req.body.status, req.params.id]
+      [req.body.status, id]
     );
 
     res.json({ data: notFoundIfMissing(result.rows[0]) });

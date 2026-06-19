@@ -3,6 +3,7 @@ import { query } from '../db.js';
 import { exposedError } from '../middleware/auth.js';
 import {
   validateImageUrls,
+  validatePositiveIntegerId,
   validateRequiredString,
   validateSlug
 } from '../utils/validation.js';
@@ -23,19 +24,23 @@ function validateBlogPayload(body) {
   const content = validateRequiredString(body.content, 'Content');
   const coverImageUrl = validateRequiredString(body.cover_image_url, 'Cover image url');
   const imageUrls = body.image_urls === undefined ? [] : body.image_urls;
+
+  if (
+    Array.isArray(imageUrls) &&
+    imageUrls.length > MAX_ADDITIONAL_IMAGE_URLS
+  ) {
+    throw exposedError(
+      400,
+      'Image urls cannot contain more than 6 items when a cover image is included'
+    );
+  }
+
   const imageUrlsValidation = validateImageUrls(imageUrls);
 
   for (const validation of [title, slug, excerpt, content, coverImageUrl, imageUrlsValidation]) {
     if (!validation.valid) {
       throw exposedError(400, validation.message);
     }
-  }
-
-  if (imageUrlsValidation.value.length > MAX_ADDITIONAL_IMAGE_URLS) {
-    throw exposedError(
-      400,
-      'Image urls cannot contain more than 6 items when a cover image is included'
-    );
   }
 
   return {
@@ -46,6 +51,16 @@ function validateBlogPayload(body) {
     cover_image_url: coverImageUrl.value,
     image_urls: imageUrlsValidation.value
   };
+}
+
+function validateRouteId(value) {
+  const id = validatePositiveIntegerId(value);
+
+  if (!id.valid) {
+    throw exposedError(400, id.message);
+  }
+
+  return id.value;
 }
 
 async function ensureUniqueSlug(slug, excludedId) {
@@ -134,13 +149,15 @@ router.post(
 router.get(
   '/:id',
   asyncHandler(async (req, res) => {
+    const id = validateRouteId(req.params.id);
+
     const result = await query(
       `
         SELECT ${blogSelectFields}
         FROM blogs
         WHERE id = $1
       `,
-      [req.params.id]
+      [id]
     );
 
     res.json({ data: notFoundIfMissing(result.rows[0]) });
@@ -150,9 +167,10 @@ router.get(
 router.put(
   '/:id',
   asyncHandler(async (req, res) => {
+    const id = validateRouteId(req.params.id);
     const blog = validateBlogPayload(req.body);
 
-    await ensureUniqueSlug(blog.slug, req.params.id);
+    await ensureUniqueSlug(blog.slug, id);
 
     try {
       const result = await query(
@@ -176,7 +194,7 @@ router.put(
           blog.content,
           blog.cover_image_url,
           blog.image_urls,
-          req.params.id
+          id
         ]
       );
 
@@ -190,6 +208,8 @@ router.put(
 router.patch(
   '/:id/publish',
   asyncHandler(async (req, res) => {
+    const id = validateRouteId(req.params.id);
+
     if (typeof req.body.published !== 'boolean') {
       throw exposedError(400, 'Published must be a boolean');
     }
@@ -201,7 +221,7 @@ router.patch(
         WHERE id = $2
         RETURNING ${blogSelectFields}
       `,
-      [req.body.published, req.params.id]
+      [req.body.published, id]
     );
 
     res.json({ data: notFoundIfMissing(result.rows[0]) });
@@ -211,13 +231,15 @@ router.patch(
 router.delete(
   '/:id',
   asyncHandler(async (req, res) => {
+    const id = validateRouteId(req.params.id);
+
     const result = await query(
       `
         DELETE FROM blogs
         WHERE id = $1
         RETURNING id
       `,
-      [req.params.id]
+      [id]
     );
 
     notFoundIfMissing(result.rows[0]);

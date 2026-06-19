@@ -320,6 +320,68 @@ describe('admin API', () => {
     expect(query).toHaveBeenCalledTimes(1);
   });
 
+  it('returns 409 when creating a blog hits the slug unique constraint', async () => {
+    query
+      .mockResolvedValueOnce({ rows: [] })
+      .mockRejectedValueOnce({
+        code: '23505',
+        constraint: 'blogs_slug_key'
+      });
+
+    const response = await request(app)
+      .post('/api/admin/blogs')
+      .set(adminHeaders)
+      .send(blogPayload);
+
+    expect(response.status).toBe(409);
+    expect(response.body).toEqual({ error: 'Slug already exists' });
+    expect(query).toHaveBeenCalledTimes(2);
+    expect(query.mock.calls[1][0]).toContain('INSERT INTO blogs');
+  });
+
+  it('returns 409 when updating a blog hits the slug unique constraint', async () => {
+    query
+      .mockResolvedValueOnce({ rows: [] })
+      .mockRejectedValueOnce({
+        code: '23505',
+        constraint: 'blogs_slug_key'
+      });
+
+    const response = await request(app)
+      .put('/api/admin/blogs/7')
+      .set(adminHeaders)
+      .send({ ...blogPayload, slug: 'admin-blog-updated' });
+
+    expect(response.status).toBe(409);
+    expect(response.body).toEqual({ error: 'Slug already exists' });
+    expect(query).toHaveBeenCalledTimes(2);
+    expect(query.mock.calls[1][0]).toContain('UPDATE blogs');
+  });
+
+  it('rejects invalid admin blog IDs before querying', async () => {
+    const readResponse = await request(app)
+      .get('/api/admin/blogs/not-a-number')
+      .set(adminHeaders);
+    const updateResponse = await request(app)
+      .put('/api/admin/blogs/not-a-number')
+      .set(adminHeaders)
+      .send(blogPayload);
+    const publishResponse = await request(app)
+      .patch('/api/admin/blogs/not-a-number/publish')
+      .set(adminHeaders)
+      .send({ published: true });
+    const deleteResponse = await request(app)
+      .delete('/api/admin/blogs/not-a-number')
+      .set(adminHeaders);
+
+    expect(readResponse.status).toBe(400);
+    expect(updateResponse.status).toBe(400);
+    expect(publishResponse.status).toBe(400);
+    expect(deleteResponse.status).toBe(400);
+    expect(readResponse.body).toEqual({ error: 'Invalid id' });
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it('rejects more than six additional image URLs before inserting', async () => {
     const response = await request(app)
       .post('/api/admin/blogs')
@@ -378,6 +440,17 @@ describe('admin API', () => {
     expect(query.mock.calls[0][0]).toContain('UPDATE comments');
     expect(query.mock.calls[0][1]).toEqual(['approved', '3']);
     expect(query.mock.calls[1][1]).toEqual(['rejected', '3']);
+  });
+
+  it('rejects invalid admin comment IDs before querying', async () => {
+    const response = await request(app)
+      .patch('/api/admin/comments/not-a-number/status')
+      .set(adminHeaders)
+      .send({ status: 'approved' });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: 'Invalid id' });
+    expect(query).not.toHaveBeenCalled();
   });
 
   it('lists comments for moderation with blog titles', async () => {
