@@ -6,8 +6,11 @@ import {
   publishAdminBlog,
   updateAdminBlog
 } from '../api.js';
+import Pagination from '../components/Pagination.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
 import { BlogCardSkeleton } from '../components/Skeleton.jsx';
+
+const PAGE_SIZE = 10;
 
 const emptyForm = {
   title: '',
@@ -44,11 +47,36 @@ export default function AdminBlogsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
 
   const additionalImageCount = useMemo(
     () => parseImageUrls(form.image_urls_text).length,
     [form.image_urls_text]
   );
+  const filteredBlogs = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase();
+
+    if (!keyword) {
+      return blogs;
+    }
+
+    return blogs.filter((blog) =>
+      `${blog.title || ''} ${blog.slug || ''}`.toLowerCase().includes(keyword)
+    );
+  }, [blogs, searchTerm]);
+  const totalPages = Math.ceil(filteredBlogs.length / PAGE_SIZE);
+  const visibleBlogs = filteredBlogs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (totalPages > 0 && page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   async function loadBlogs() {
     setLoading(true);
@@ -238,7 +266,20 @@ export default function AdminBlogsPage() {
       <section className="admin-panel" aria-labelledby="blog-table-title">
         <div className="admin-panel__header">
           <h2 id="blog-table-title">Blogs</h2>
-          <span className="muted">{blogs.length} items</span>
+          <span className="muted">
+            {filteredBlogs.length} of {blogs.length} items
+          </span>
+        </div>
+
+        <div className="admin-tools">
+          <label htmlFor="admin-blog-search">Search blogs</label>
+          <input
+            id="admin-blog-search"
+            type="search"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search title or slug"
+          />
         </div>
 
         {loading ? (
@@ -246,53 +287,56 @@ export default function AdminBlogsPage() {
             <BlogCardSkeleton />
             <BlogCardSkeleton />
           </div>
-        ) : blogs.length ? (
-          <div className="table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Slug</th>
-                  <th>Status</th>
-                  <th>Views</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {blogs.map((blog) => (
-                  <tr key={blog.id}>
-                    <td>{blog.title}</td>
-                    <td>{blog.slug}</td>
-                    <td>
-                      <StatusBadge status={blog.published ? 'published' : 'draft'} />
-                    </td>
-                    <td>{blog.view_count ?? 0}</td>
-                    <td>
-                      <div className="table-actions">
-                        <button type="button" className="button-secondary" onClick={() => startEdit(blog)}>
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="button-secondary"
-                          onClick={() => handlePublish(blog, !blog.published)}
-                        >
-                          {blog.published ? 'Unpublish' : 'Publish'}
-                        </button>
-                        <button type="button" className="button-danger" onClick={() => handleDelete(blog)}>
-                          Delete
-                        </button>
-                      </div>
-                    </td>
+        ) : filteredBlogs.length ? (
+          <>
+            <div className="table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Slug</th>
+                    <th>Status</th>
+                    <th>Views</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {visibleBlogs.map((blog) => (
+                    <tr key={blog.id}>
+                      <td>{blog.title}</td>
+                      <td>{blog.slug}</td>
+                      <td>
+                        <StatusBadge status={blog.published ? 'published' : 'draft'} />
+                      </td>
+                      <td>{blog.view_count ?? 0}</td>
+                      <td>
+                        <div className="table-actions">
+                          <button type="button" className="button-secondary" onClick={() => startEdit(blog)}>
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="button-secondary"
+                            onClick={() => handlePublish(blog, !blog.published)}
+                          >
+                            {blog.published ? 'Unpublish' : 'Publish'}
+                          </button>
+                          <button type="button" className="button-danger" onClick={() => handleDelete(blog)}>
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          </>
         ) : (
           <div className="empty-state">
-            <h2>No blogs yet</h2>
-            <p>Create the first blog from the form.</p>
+            <h2>{blogs.length ? 'No matching blogs' : 'No blogs yet'}</h2>
+            <p>{blogs.length ? 'Try a different title or slug.' : 'Create the first blog from the form.'}</p>
           </div>
         )}
       </section>
