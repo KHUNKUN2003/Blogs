@@ -849,8 +849,71 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .table-wrap {
+    overflow: visible;
+  }
+
   .admin-table {
-    min-width: 620px;
+    display: grid;
+    min-width: 0;
+    gap: 0.75rem;
+  }
+
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table tbody,
+  .admin-table tr,
+  .admin-table td {
+    display: block;
+  }
+
+  .admin-table tbody {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .admin-table tr {
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+    padding: 0.75rem;
+  }
+
+  .admin-table td {
+    border-bottom: 0;
+    padding: 0.45rem 0;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-table td::before {
+    display: block;
+    margin-bottom: 0.15rem;
+    color: var(--color-muted);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .admin-table td:nth-child(1)::before {
+    content: "Title";
+  }
+
+  .admin-table td:nth-child(2)::before {
+    content: "Slug";
+  }
+
+  .admin-table td:nth-child(3)::before {
+    content: "Status";
+  }
+
+  .admin-table td:nth-child(4)::before {
+    content: "Views";
+  }
+
+  .admin-table td:nth-child(5)::before {
+    content: "Actions";
   }
 
   .table-actions {
@@ -870,9 +933,5 @@ h2 {
 
   h1 {
     font-size: 1.8rem;
-  }
-
-  .admin-table {
-    min-width: 560px;
   }
 }
