@@ -60,6 +60,20 @@ npm test
 npm run build --prefix client
 ```
 
+## Deploy
+
+For production, deploy the app on Vercel and use Neon for PostgreSQL.
+
+Required production environment variables:
+
+- `DATABASE_URL`: Neon Postgres connection string, preferably with `sslmode=require`
+- `ADMIN_USERNAME`: admin username
+- `ADMIN_PASSWORD`: secure admin password, at least 12 characters
+- `ADMIN_TOKEN`: secure bearer token, at least 16 characters
+- `CLIENT_ORIGIN`: production site URL, for example `https://your-project.vercel.app`
+
+The Vercel config builds the React client from `client/` and serves the Express API through `/api`.
+
 ## Default Admin
 
 - Username: `admin`

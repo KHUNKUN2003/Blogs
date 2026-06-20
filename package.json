@@ -1,6 +1,7 @@
 {
   "name": "blog-system-assignment",
   "private": true,
+  "type": "module",
   "engines": {
     "node": ">=20.19.0"
   },
