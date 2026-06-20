@@ -170,20 +170,26 @@ export default function AdminBlogsPage() {
         </div>
 
         <form className="admin-form" onSubmit={handleSubmit}>
-          <label htmlFor="blog-title">Title</label>
-          <input
-            id="blog-title"
-            value={form.title}
-            onChange={(event) => updateField('title', event.target.value)}
-          />
+          <div className="form-row">
+            <div className="form-field">
+              <label htmlFor="blog-title">Title</label>
+              <input
+                id="blog-title"
+                value={form.title}
+                onChange={(event) => updateField('title', event.target.value)}
+              />
+            </div>
 
-          <label htmlFor="blog-slug">Slug</label>
-          <input
-            id="blog-slug"
-            value={form.slug}
-            onChange={(event) => updateField('slug', event.target.value)}
-            placeholder="my-blog-post"
-          />
+            <div className="form-field">
+              <label htmlFor="blog-slug">Slug</label>
+              <input
+                id="blog-slug"
+                value={form.slug}
+                onChange={(event) => updateField('slug', event.target.value)}
+                placeholder="my-blog-post"
+              />
+            </div>
+          </div>
 
           <label htmlFor="blog-excerpt">Excerpt</label>
           <textarea
@@ -201,12 +207,14 @@ export default function AdminBlogsPage() {
             rows="8"
           />
 
-          <label htmlFor="blog-cover">Cover image URL</label>
-          <input
-            id="blog-cover"
-            value={form.cover_image_url}
-            onChange={(event) => updateField('cover_image_url', event.target.value)}
-          />
+          <div className="form-field">
+            <label htmlFor="blog-cover">Cover image URL</label>
+            <input
+              id="blog-cover"
+              value={form.cover_image_url}
+              onChange={(event) => updateField('cover_image_url', event.target.value)}
+            />
+          </div>
 
           <label htmlFor="blog-images">Additional image URLs</label>
           <textarea

@@ -440,7 +440,7 @@ h2 {
 }
 
 .admin-grid {
-  grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1.2fr);
+  grid-template-columns: 1fr;
   align-items: start;
 }
 
@@ -463,6 +463,17 @@ h2 {
   font-weight: 700;
 }
 
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.form-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
 .field-help {
   margin: -0.4rem 0 0;
 }
@@ -474,7 +485,7 @@ h2 {
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 720px;
+  min-width: 860px;
 }
 
 .admin-table th,
@@ -603,5 +614,9 @@ h2 {
   .pagination {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
   }
 }
