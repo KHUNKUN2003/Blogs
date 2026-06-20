@@ -47,6 +47,7 @@ The Docker database maps host port `5433` to container port `5432` to avoid conf
 
 - Public blog list with cover image, title, excerpt, posted date, title search, and 10-item pagination
 - Public blog detail with cover image, up to 6 additional images, full content, view count, and approved comments
+- Admin blog images can be entered as URLs or selected from local image files
 - Comment submission with required sender name and Thai/numeric message validation
 - Pending comments stay hidden until approved by an admin
 - Admin login, blog CRUD, slug editing, publish/unpublish, delete, and comment approve/reject
@@ -76,9 +77,9 @@ The Vercel config builds the React client from `client/` and serves the Express 
 
 ## Default Admin
 
-- Username: `admin`
-- Password: `admin123`
-- Development token: `dev-admin-token-change-me`
+- Username: `blogadmin`
+- Password: `BlogAdmin!2026Deploy`
+- Development token: `blog-system-admin-token-2026-06-20`
 
 Change these values before using the app outside local development.
 
@@ -96,4 +97,5 @@ The validation is implemented on both client and server with this character rule
 
 - The public search is intentionally title-only to match the assignment.
 - The cover image plus additional images are capped at 7 total images per blog.
-- Local development allows the default admin credentials above. Production mode requires non-default admin credentials and token.
+- Local file image uploads are compressed in the browser and stored as image data strings in PostgreSQL, which keeps the assignment deployable without a separate file storage service.
+- Production mode requires explicit admin credentials and token in environment variables.

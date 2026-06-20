@@ -9,7 +9,7 @@ vi.mock('../src/db.js', () => ({
 
 const thaiGreeting = '\u0e2a\u0e27\u0e31\u0e2a\u0e14\u0e35';
 const thaiNumericMessage = `${thaiGreeting} 123`;
-const adminToken = 'dev-admin-token-change-me';
+const adminToken = 'blog-system-admin-token-2026-06-20';
 
 const adminHeaders = {
   Authorization: `Bearer ${adminToken}`
@@ -217,7 +217,7 @@ describe('admin API', () => {
   it('logs in with configured admin credentials', async () => {
     const response = await request(app)
       .post('/api/admin/login')
-      .send({ username: 'admin', password: 'admin123' });
+      .send({ username: 'blogadmin', password: 'BlogAdmin!2026Deploy' });
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ token: adminToken });

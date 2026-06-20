@@ -10,7 +10,7 @@ import publicBlogsRouter from './routes/publicBlogs.js';
 const app = express();
 
 app.use(cors({ origin: config.clientOrigin }));
-app.use(express.json());
+app.use(express.json({ limit: '6mb' }));
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true });

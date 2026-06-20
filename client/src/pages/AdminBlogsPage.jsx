@@ -11,6 +11,9 @@ import StatusBadge from '../components/StatusBadge.jsx';
 import { BlogCardSkeleton } from '../components/Skeleton.jsx';
 
 const PAGE_SIZE = 10;
+const MAX_IMAGE_WIDTH = 1400;
+const MAX_IMAGE_HEIGHT = 1000;
+const IMAGE_QUALITY = 0.82;
 
 const emptyForm = {
   title: '',
@@ -39,12 +42,55 @@ function parseImageUrls(text) {
     .filter(Boolean);
 }
 
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('Selected image could not be read.'));
+    image.src = src;
+  });
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Selected image could not be read.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function fileToCompressedDataUrl(file) {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('Please select image files only.');
+  }
+
+  const source = await readFileAsDataUrl(file);
+  const image = await loadImage(source);
+  const ratio = Math.min(
+    1,
+    MAX_IMAGE_WIDTH / image.naturalWidth,
+    MAX_IMAGE_HEIGHT / image.naturalHeight
+  );
+  const width = Math.max(1, Math.round(image.naturalWidth * ratio));
+  const height = Math.max(1, Math.round(image.naturalHeight * ratio));
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+
+  canvas.width = width;
+  canvas.height = height;
+  context.drawImage(image, 0, 0, width, height);
+
+  return canvas.toDataURL('image/jpeg', IMAGE_QUALITY);
+}
+
 export default function AdminBlogsPage() {
   const [blogs, setBlogs] = useState([]);
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [processingImages, setProcessingImages] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -98,6 +144,64 @@ export default function AdminBlogsPage() {
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  async function handleCoverFileChange(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    setProcessingImages(true);
+    setError('');
+    setNotice('');
+
+    try {
+      const dataUrl = await fileToCompressedDataUrl(file);
+      updateField('cover_image_url', dataUrl);
+      setNotice('Cover image selected.');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setProcessingImages(false);
+    }
+  }
+
+  async function handleAdditionalFilesChange(event) {
+    const files = Array.from(event.target.files || []);
+    event.target.value = '';
+
+    if (files.length === 0) {
+      return;
+    }
+
+    const currentImages = parseImageUrls(form.image_urls_text);
+
+    if (currentImages.length + files.length > 6) {
+      setError('Additional images cannot exceed 6 because the cover counts as image 1.');
+      return;
+    }
+
+    setProcessingImages(true);
+    setError('');
+    setNotice('');
+
+    try {
+      const dataUrls = [];
+
+      for (const file of files) {
+        dataUrls.push(await fileToCompressedDataUrl(file));
+      }
+
+      updateField('image_urls_text', [...currentImages, ...dataUrls].join('\n'));
+      setNotice(`${dataUrls.length} additional image${dataUrls.length > 1 ? 's' : ''} selected.`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setProcessingImages(false);
+    }
   }
 
   function startCreate() {
@@ -236,28 +340,69 @@ export default function AdminBlogsPage() {
           />
 
           <div className="form-field">
-            <label htmlFor="blog-cover">Cover image URL</label>
-            <input
-              id="blog-cover"
-              value={form.cover_image_url}
-              onChange={(event) => updateField('cover_image_url', event.target.value)}
-            />
+            <label htmlFor="blog-cover">Cover image</label>
+            <div className="image-input">
+              <input
+                id="blog-cover"
+                value={form.cover_image_url}
+                onChange={(event) => updateField('cover_image_url', event.target.value)}
+                placeholder="Paste image URL or choose a file"
+              />
+              <label className="file-button" htmlFor="blog-cover-file">
+                Choose file
+              </label>
+              <input
+                id="blog-cover-file"
+                className="visually-hidden"
+                type="file"
+                accept="image/*"
+                onChange={handleCoverFileChange}
+              />
+            </div>
+            {form.cover_image_url ? (
+              <img className="image-preview image-preview--cover" src={form.cover_image_url} alt="" />
+            ) : null}
           </div>
 
-          <label htmlFor="blog-images">Additional image URLs</label>
-          <textarea
-            id="blog-images"
-            value={form.image_urls_text}
-            onChange={(event) => updateField('image_urls_text', event.target.value)}
-            rows="5"
-            placeholder="One URL per line"
-          />
-          <p className="field-help">{additionalImageCount}/6 additional images</p>
+          <div className="form-field">
+            <label htmlFor="blog-images">Additional images</label>
+            <div className="image-input image-input--stacked">
+              <textarea
+                id="blog-images"
+                value={form.image_urls_text}
+                onChange={(event) => updateField('image_urls_text', event.target.value)}
+                rows="5"
+                placeholder="One URL per line or choose files"
+              />
+              <label className="file-button" htmlFor="blog-images-file">
+                Choose files
+              </label>
+              <input
+                id="blog-images-file"
+                className="visually-hidden"
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleAdditionalFilesChange}
+              />
+            </div>
+            <p className="field-help">
+              {additionalImageCount}/6 additional images
+              {processingImages ? ' - processing selected images...' : ''}
+            </p>
+            {additionalImageCount ? (
+              <div className="image-preview-grid" aria-hidden="true">
+                {parseImageUrls(form.image_urls_text).map((src, index) => (
+                  <img className="image-preview" key={`${src.slice(0, 64)}-${index}`} src={src} alt="" />
+                ))}
+              </div>
+            ) : null}
+          </div>
 
           {error ? <div className="notice notice--error">{error}</div> : null}
           {notice ? <div className="notice notice--success">{notice}</div> : null}
 
-          <button type="submit" disabled={saving}>
+          <button type="submit" disabled={saving || processingImages}>
             {saving ? 'Saving...' : selectedBlog ? 'Update Blog' : 'Create Blog'}
           </button>
         </form>

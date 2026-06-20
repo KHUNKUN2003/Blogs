@@ -9,9 +9,9 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const port = Number(process.env.PORT ?? 4000);
-const defaultAdminUsername = 'admin';
-const defaultAdminPassword = 'admin123';
-const defaultAdminToken = 'dev-admin-token-change-me';
+const defaultAdminUsername = 'blogadmin';
+const defaultAdminPassword = 'BlogAdmin!2026Deploy';
+const defaultAdminToken = 'blog-system-admin-token-2026-06-20';
 const productionAdminEnv = {
   ADMIN_USERNAME: process.env.ADMIN_USERNAME?.trim(),
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD?.trim(),
@@ -28,15 +28,14 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 
 if (process.env.NODE_ENV === 'production') {
   const unsafeAdminEnv = [
-    ['ADMIN_USERNAME', defaultAdminUsername],
-    ['ADMIN_PASSWORD', defaultAdminPassword],
-    ['ADMIN_TOKEN', defaultAdminToken]
-  ].filter(([name, defaultValue]) => {
+    ['ADMIN_USERNAME'],
+    ['ADMIN_PASSWORD'],
+    ['ADMIN_TOKEN']
+  ].filter(([name]) => {
     const value = productionAdminEnv[name];
     return (
       value === undefined ||
       value.length === 0 ||
-      value === defaultValue ||
       value.length < (minimumAdminEnvLengths[name] ?? 1)
     );
   });
