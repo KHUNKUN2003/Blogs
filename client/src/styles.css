@@ -527,8 +527,29 @@ h2 {
   object-fit: cover;
 }
 
-.image-preview--cover {
+.image-preview-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.image-preview-item--cover {
   max-width: 360px;
+}
+
+.image-remove-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  min-height: 34px;
+  border-color: #d8897f;
+  background: rgba(182, 66, 53, 0.92);
+  color: var(--color-surface);
+  font-size: 0.82rem;
+  padding: 0.35rem 0.55rem;
+}
+
+.image-preview--cover {
   aspect-ratio: 16 / 10;
 }
 

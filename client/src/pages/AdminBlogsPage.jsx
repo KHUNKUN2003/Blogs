@@ -146,6 +146,22 @@ export default function AdminBlogsPage() {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
+  function removeCoverImage() {
+    updateField('cover_image_url', '');
+    setNotice('Cover image removed.');
+    setError('');
+  }
+
+  function removeAdditionalImage(indexToRemove) {
+    const imageUrls = parseImageUrls(form.image_urls_text).filter(
+      (_url, index) => index !== indexToRemove
+    );
+
+    updateField('image_urls_text', imageUrls.join('\n'));
+    setNotice('Additional image removed.');
+    setError('');
+  }
+
   async function handleCoverFileChange(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -360,7 +376,17 @@ export default function AdminBlogsPage() {
               />
             </div>
             {form.cover_image_url ? (
-              <img className="image-preview image-preview--cover" src={form.cover_image_url} alt="" />
+              <div className="image-preview-item image-preview-item--cover">
+                <img className="image-preview image-preview--cover" src={form.cover_image_url} alt="" />
+                <button
+                  type="button"
+                  className="image-remove-button"
+                  onClick={removeCoverImage}
+                  aria-label="Remove cover image"
+                >
+                  Remove
+                </button>
+              </div>
             ) : null}
           </div>
 
@@ -391,9 +417,19 @@ export default function AdminBlogsPage() {
               {processingImages ? ' - processing selected images...' : ''}
             </p>
             {additionalImageCount ? (
-              <div className="image-preview-grid" aria-hidden="true">
+              <div className="image-preview-grid">
                 {parseImageUrls(form.image_urls_text).map((src, index) => (
-                  <img className="image-preview" key={`${src.slice(0, 64)}-${index}`} src={src} alt="" />
+                  <div className="image-preview-item" key={`${src.slice(0, 64)}-${index}`}>
+                    <img className="image-preview" src={src} alt="" />
+                    <button
+                      type="button"
+                      className="image-remove-button"
+                      onClick={() => removeAdditionalImage(index)}
+                      aria-label={`Remove additional image ${index + 1}`}
+                    >
+                      Remove
+                    </button>
+                  </div>
                 ))}
               </div>
             ) : null}
