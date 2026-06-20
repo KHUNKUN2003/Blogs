@@ -53,7 +53,7 @@ if (process.env.NODE_ENV === 'production') {
 export const config = {
   databaseUrl:
     process.env.DATABASE_URL ??
-    'postgres://blog_user:blog_password@localhost:5432/blog_system',
+    'postgres://blog_user:blog_password@localhost:5433/blog_system',
   port,
   clientOrigin: process.env.CLIENT_ORIGIN ?? 'http://localhost:5173',
   adminUsername: productionAdminEnv.ADMIN_USERNAME ?? defaultAdminUsername,

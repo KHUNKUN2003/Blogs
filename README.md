@@ -6,7 +6,7 @@ Full-stack blog system for the assignment, with a React public/admin frontend, a
 
 - Client: React, Vite, React Router, Vitest, Testing Library
 - Server: Node.js, Express, pg, CORS, dotenv, Vitest, Supertest
-- Database: PostgreSQL 16 via Docker Compose
+- Database: PostgreSQL 16 via Docker Compose on host port `5433`
 
 ## Setup
 
@@ -40,6 +40,8 @@ npm run dev
 ```
 
 The API runs on `http://localhost:4000` and the client runs on `http://localhost:5173`.
+
+The Docker database maps host port `5433` to container port `5432` to avoid conflicts with local PostgreSQL installs.
 
 ## Features
 
