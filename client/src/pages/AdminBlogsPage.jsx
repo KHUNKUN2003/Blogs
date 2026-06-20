@@ -95,11 +95,13 @@ export default function AdminBlogsPage() {
   const [notice, setNotice] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
+  const [additionalImageIndex, setAdditionalImageIndex] = useState(0);
 
-  const additionalImageCount = useMemo(
-    () => parseImageUrls(form.image_urls_text).length,
+  const additionalImages = useMemo(
+    () => parseImageUrls(form.image_urls_text),
     [form.image_urls_text]
   );
+  const additionalImageCount = additionalImages.length;
   const filteredBlogs = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
 
@@ -123,6 +125,17 @@ export default function AdminBlogsPage() {
       setPage(totalPages);
     }
   }, [page, totalPages]);
+
+  useEffect(() => {
+    if (additionalImages.length === 0) {
+      setAdditionalImageIndex(0);
+      return;
+    }
+
+    if (additionalImageIndex > additionalImages.length - 1) {
+      setAdditionalImageIndex(additionalImages.length - 1);
+    }
+  }, [additionalImageIndex, additionalImages.length]);
 
   async function loadBlogs() {
     setLoading(true);
@@ -153,13 +166,28 @@ export default function AdminBlogsPage() {
   }
 
   function removeAdditionalImage(indexToRemove) {
-    const imageUrls = parseImageUrls(form.image_urls_text).filter(
+    const imageUrls = additionalImages.filter(
       (_url, index) => index !== indexToRemove
     );
 
     updateField('image_urls_text', imageUrls.join('\n'));
+    setAdditionalImageIndex((currentIndex) =>
+      Math.min(currentIndex, Math.max(0, imageUrls.length - 1))
+    );
     setNotice('Additional image removed.');
     setError('');
+  }
+
+  function showPreviousAdditionalImage() {
+    setAdditionalImageIndex((currentIndex) =>
+      currentIndex === 0 ? additionalImages.length - 1 : currentIndex - 1
+    );
+  }
+
+  function showNextAdditionalImage() {
+    setAdditionalImageIndex((currentIndex) =>
+      currentIndex === additionalImages.length - 1 ? 0 : currentIndex + 1
+    );
   }
 
   async function handleCoverFileChange(event) {
@@ -193,7 +221,7 @@ export default function AdminBlogsPage() {
       return;
     }
 
-    const currentImages = parseImageUrls(form.image_urls_text);
+    const currentImages = additionalImages;
 
     if (currentImages.length + files.length > 6) {
       setError('Additional images cannot exceed 6 because the cover counts as image 1.');
@@ -417,21 +445,60 @@ export default function AdminBlogsPage() {
               {processingImages ? ' - processing selected images...' : ''}
             </p>
             {additionalImageCount ? (
-              <div className="image-preview-grid">
-                {parseImageUrls(form.image_urls_text).map((src, index) => (
-                  <div className="image-preview-item" key={`${src.slice(0, 64)}-${index}`}>
-                    <img className="image-preview" src={src} alt="" />
+              additionalImageCount === 1 ? (
+                <div className="image-preview-grid">
+                  <div className="image-preview-item">
+                    <img className="image-preview" src={additionalImages[0]} alt="" />
                     <button
                       type="button"
                       className="image-remove-button"
-                      onClick={() => removeAdditionalImage(index)}
-                      aria-label={`Remove additional image ${index + 1}`}
+                      onClick={() => removeAdditionalImage(0)}
+                      aria-label="Remove additional image 1"
                     >
                       Remove
                     </button>
                   </div>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <div className="image-carousel" aria-label="Additional image preview carousel">
+                  <div className="image-preview-item image-preview-item--carousel">
+                    <img
+                      className="image-preview image-preview--carousel"
+                      src={additionalImages[additionalImageIndex]}
+                      alt=""
+                    />
+                    <button
+                      type="button"
+                      className="image-remove-button"
+                      onClick={() => removeAdditionalImage(additionalImageIndex)}
+                      aria-label={`Remove additional image ${additionalImageIndex + 1}`}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <div className="carousel-controls">
+                    <button
+                      type="button"
+                      className="button-secondary"
+                      onClick={showPreviousAdditionalImage}
+                      aria-label="Show previous additional image"
+                    >
+                      Previous
+                    </button>
+                    <span className="carousel-counter">
+                      {additionalImageIndex + 1} / {additionalImageCount}
+                    </span>
+                    <button
+                      type="button"
+                      className="button-secondary"
+                      onClick={showNextAdditionalImage}
+                      aria-label="Show next additional image"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )
             ) : null}
           </div>
 

@@ -553,10 +553,43 @@ h2 {
   aspect-ratio: 16 / 10;
 }
 
+.image-preview-item--carousel,
+.image-preview--carousel {
+  width: min(100%, 520px);
+}
+
+.image-preview--carousel {
+  aspect-ratio: 16 / 10;
+}
+
 .image-preview-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 0.6rem;
+}
+
+.image-carousel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.carousel-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.carousel-controls button {
+  min-height: 38px;
+  padding: 0.45rem 0.7rem;
+}
+
+.carousel-counter {
+  min-width: 4.5rem;
+  color: var(--color-muted);
+  font-weight: 800;
+  text-align: center;
 }
 
 .visually-hidden {
