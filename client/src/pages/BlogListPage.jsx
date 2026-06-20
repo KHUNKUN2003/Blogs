@@ -16,6 +16,17 @@ export default function BlogListPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1);
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [searchInput]);
+
+  useEffect(() => {
     let active = true;
 
     async function loadBlogs() {
