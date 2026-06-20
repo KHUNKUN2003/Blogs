@@ -819,10 +819,18 @@ h2 {
   }
 
   .search-form__controls button,
-  .admin-panel__header button,
   .file-button,
   .admin-form > button {
     width: 100%;
+  }
+
+  .admin-panel__header {
+    align-items: flex-start;
+  }
+
+  .admin-panel__header button {
+    width: auto;
+    min-width: 88px;
   }
 
   .blog-grid {
