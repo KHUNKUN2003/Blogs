@@ -54,9 +54,7 @@ router.get(
 
     if (search.length > 0) {
       params.push(`%${search}%`);
-      where.push(
-        `(title ILIKE $${params.length} OR excerpt ILIKE $${params.length} OR content ILIKE $${params.length})`
-      );
+      where.push(`title ILIKE $${params.length}`);
     }
 
     const whereSql = `WHERE ${where.join(' AND ')}`;

@@ -58,7 +58,6 @@ export default function BlogListPage() {
     <section className="page-section" aria-labelledby="blog-list-title">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Public Blog</p>
           <h1 id="blog-list-title">Latest Posts</h1>
         </div>
         <form className="search-form" onSubmit={handleSearchSubmit}>
@@ -69,7 +68,7 @@ export default function BlogListPage() {
               type="search"
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Search title, excerpt, content"
+              placeholder="Search by blog title"
             />
             <button type="submit">Search</button>
           </div>

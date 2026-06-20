@@ -77,6 +77,9 @@ describe('public blog API', () => {
     expect(query.mock.calls[0][0]).toContain('cover_image_url');
     expect(query.mock.calls[0][0]).toContain('posted_at');
     expect(query.mock.calls[0][0]).toContain('view_count');
+    expect(query.mock.calls[0][0]).toContain('title ILIKE $1');
+    expect(query.mock.calls[0][0]).not.toContain('OR excerpt ILIKE');
+    expect(query.mock.calls[0][0]).not.toContain('OR content ILIKE');
     expect(query.mock.calls[0][0]).toContain('ORDER BY posted_at DESC');
     expect(query.mock.calls[0][1]).toEqual(['%sec%', 1, 1]);
   });
